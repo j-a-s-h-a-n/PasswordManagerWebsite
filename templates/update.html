@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block heading %}
+Update Password!
+{% endblock %}
+
+
+{% block content %}
+{% if message %}
+<h3>{{ message }}</h3>
+    <br>
+{% endif %}
+{%if form%}
+    <form action="{{url_for('update', id=account.id)}}" method="POST" style="padding:20px;">
+        {{form.website.label}}
+        <br>
+        <br>
+        {{account.website}}
+        <br>
+        {{form.website}}
+        <br>
+        <br>
+        {% if form.website.errors %}
+            {% for error in form.website.errors %}
+            <b style="color:tomato;"> {{ error }} </b>
+            <br>
+            {% endfor %}
+        {% endif %}
+
+        {{form.username.label}}
+        <br>
+        <br>
+        {{account.user}}
+        <br>
+        {{form.username}}
+        <br>
+        <br>
+        {% if form.username.errors %}
+            {% for error in form.username.errors %}
+            <b style="color:tomato;"> {{ error }} </b>
+            <br>
+            {% endfor %}
+        {% endif %}
+
+        {{form.password.label}}
+        <br>
+        <br>
+        {{account.password}}
+        <br>
+        {{form.password}}
+        <br>
+        <br>
+        {% if form.password.errors %}
+            {% for error in form.password.errors %}
+            <b style="color:tomato;"> {{ error }} </b>
+            <br>
+            {% endfor %}
+        {% endif %}
+
+        {{ form.csrf_token }}
+        {{ form.submit }}
+    </form>
+
+{% endif %}
+{% endblock %}

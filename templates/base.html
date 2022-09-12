@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Password Vault</title>
+    <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}"/>
+</head>
+<div class="header">
+
+    <h1>Password Vault</h1>
+
+</div>
+
+
+<div>
+      <ul>
+            {% if 'user' in session %}
+            <li style="float: right"><a class="active" href="{{url_for('logout')}}">Log Out</a></li>
+          <li style="float: right"><a class="export" href="{{url_for('export')}}">Export</a></li>
+            <li><a href="{{url_for('passwords')}}">Passwords</a></li>
+            <li><a href="{{url_for('input')}}">Add Password</a></li>
+            {% else %}
+            <li ><a href="{{url_for('signup')}}">Sign Up</a></li>
+            <li> <a href="{{url_for('login')}}">Login</a></li>
+            {% endif%}
+      </ul>
+</div>
+<body>
+  <div>
+    <h2> {% block heading %} {% endblock %} </h2>
+  </div>
+  <div>
+    {% block content %} {% endblock %}
+  </div>
+</body>
+</html>

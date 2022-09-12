@@ -1,0 +1,59 @@
+
+{% extends "base.html" %}
+
+{% block heading %}
+Login
+{% endblock %}
+
+{% block content %}
+<br>
+
+{% if message %}
+<h3>{{ message }}</h3>
+    <br>
+{% endif %}
+
+{%if form%}
+
+
+    <form action="{{url_for('login')}}" method="POST" style="padding:20px">
+
+
+        {{form.email.label}}
+        <br>
+        <br>
+        {{form.email}}
+        <br>
+        <br>
+        {% if form.email.errors %}
+            {% for error in form.email.errors %}
+            <b style="color:tomato;"> {{ error }} </b>
+            <br>
+            {% endfor %}
+        {% endif %}
+
+
+        <label>{{form.password.label}}</label>
+        <br>
+        <br>
+        {{form.password}}
+        <br>
+        <br>
+        {% if form.password.errors %}
+            {% for error in form.password.errors %}
+            <b style="color:tomato;"> {{ error }} </b>
+            <br>
+            {% endfor %}
+
+        {% endif %}
+
+        {{ form.csrf_token }}
+
+        {{ form.submit }}
+
+    </form>
+<div style="text-align: center">
+<a href="/forgotpassword"><button id="for">Forgot Password</button></a>
+    </div>
+{%endif%}
+{% endblock %}

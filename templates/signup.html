@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block heading %}
+Sign Up
+{% endblock %}
+
+{% block content %}
+{% if message %}
+    <h3>{{ message }}</h3>
+    <br>
+{% endif %}
+
+{%if form%}
+    <form action="{{url_for('signup')}}" method="POST">
+        {{form.name.label}}
+        <br>
+        <br>
+        {{form.name}}
+        <br>
+        <br>
+        {% if form.name.errors %}
+            {% for error in form.name.errors %}
+            <b style="color:tomato;"> {{ error }} </b>
+            <br>
+            {% endfor %}
+        {% endif %}
+
+        {{form.email.label}}
+        <br>
+        <br>
+        {{form.email}}
+        <br>
+        <br>
+        {% if form.email.errors %}
+            {% for error in form.email.errors %}
+            <b style="color:tomato;"> {{ error }} </b>
+            <br>
+            {% endfor %}
+        {% endif %}
+
+        {{form.password.label}}
+        <br>
+        <br>
+        {{form.password}}
+        <br>
+        <br>
+        {% if form.password.errors %}
+            {% for error in form.password.errors %}
+            <b style="color:tomato;"> {{ error }} </b>
+            <br>
+            {% endfor %}
+        {% endif %}
+
+        {{form.password2.label}}
+        <br>
+        <br>
+        {{form.password2}}
+        <br>
+        <br>
+        {% if form.password2.errors %}
+            {% for error in form.password2.errors %}
+            <b style="color:tomato;"> {{ error }} </b>
+            <br>
+            {% endfor %}
+        {% endif %}
+
+        {{ form.csrf_token }}
+        {{ form.submit }}
+    </form>
+{% endif %}
+{% endblock %}
