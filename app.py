@@ -1,14 +1,17 @@
 from flask import Flask,render_template,session, redirect, url_for
-from forms import LoginForm,SignUp,Saver,Update,Forgot
+from forms import LoginForm,SignUp,Saver,Update,Forgot,UpdatePassword
 from flask_sqlalchemy import SQLAlchemy
 from emailer import Email,Message
+from itsdangerous import URLSafeTimedSerializer
 import os, random, string
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'dfewfew123213rwdsgert34tgfd1234trgf'
+secret=app.config['SECRET_KEY'] = 'jadhdndmladineonddnkenkenknlsklsnlxleiiooosoomnchiuei'
 URL = 'postgresql://zchwcojfbphbxd:85f7fd4795fe96ea00fe2ee046e5b383aa4d2a4146a81c49e3dd073463bb306d@ec2-34-231-42-166.compute-1.amazonaws.com:5432/d3sa35mr80olmb'
 app.config['SQLALCHEMY_DATABASE_URI'] = URL
 db = SQLAlchemy(app)
+
+s = URLSafeTimedSerializer(secret)
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -129,9 +132,15 @@ def delete(id):
         db.session.close()
     return redirect(url_for('passwords'))
 
-@app.route('/update/<int:id>', methods = ['POST', 'GET'])
+@app.route('/updater/<string:id>', methods = ['POST', 'GET'])
+def router(id):
+    token = s.dumps(id,salt='accounts')
+    return redirect(url_for('update',id=token))
+
+@app.route('/update/<string:id>', methods = ['POST', 'GET'])
 def update(id):
-    account_to_update = Vault.query.get(id)
+    account_id=s.loads(id,salt='accounts',max_age=15)
+    account_to_update = Vault.query.get(account_id)
     form = Update()
     if form.validate_on_submit():
         account_to_update.website = form.website.data
@@ -144,8 +153,7 @@ def update(id):
         finally:
             db.session.close()
         return redirect(url_for('passwords'))
-
-    return render_template('update.html',form = form , account = account_to_update )
+    return render_template('update.html',form = form , account = account_to_update,id=id )
 
 @app.route('/forgotpassword', methods = ['POST', 'GET'])
 def forgot():
@@ -153,16 +161,33 @@ def forgot():
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         if user:
+            token = s.dumps(user.id, salt='reset')
             message = Message()
             message.newMessage['To'] = user.email
-            message.newMessage['Subject'] = 'Password'
-            message.newMessage.set_content(f"Password: {user.password}")
+            message.newMessage['Subject'] = 'Password Reset Link'
+            message.newMessage.set_content(f"https://supersecretpasswordvault.herokuapp.com/reset/{token}")
             SendEmail = Email()
             SendEmail.sendEmail(message)
-            return render_template('forgot.html',message="Password Sent to Email!")
+            return render_template('forgot.html',message="Link sent to email!")
         return render_template('forgot.html',form=form, message="This account does not exist.")
     return render_template('forgot.html', form=form)
 
+@app.route('/reset/<string:token>', methods = ['POST', 'GET'])
+def reset(token):
+    id = s.loads(token,salt='reset',max_age=600)
+    form = UpdatePassword()
+    user = User.query.filter_by(id=id).first()
+    if form.validate_on_submit():
+        if user:
+            user.password=form.password.data
+            try:
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+            finally:
+                db.session.close()
+            return redirect(url_for('login'))
+    return render_template('reset.html', form=form ,token = token,user=user)
 
 @app.route('/export/', methods = ['POST', 'GET'])
 def export():

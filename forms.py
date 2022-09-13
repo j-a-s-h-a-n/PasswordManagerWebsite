@@ -31,3 +31,9 @@ class Update(FlaskForm):
 class Forgot(FlaskForm):
     email = StringField('Email', validators=[InputRequired(),Email()])
     submit = SubmitField('Send')
+
+class UpdatePassword(FlaskForm):
+    password = PasswordField('Password', validators=[InputRequired()])
+    password2 = PasswordField("Confirm Password",
+                              validators=[InputRequired(), EqualTo('password')])
+    submit = SubmitField('Update Password')

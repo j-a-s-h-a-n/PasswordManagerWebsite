@@ -1,0 +1,54 @@
+
+{% extends "base.html" %}
+
+{% block heading %}
+Reset Password
+{% endblock %}
+
+{% block content %}
+<br>
+
+{% if message %}
+<h3>{{ message }}</h3>
+    <br>
+{% endif %}
+
+{%if form%}
+
+    <form action="{{url_for('reset',token=token)}}" method="POST" style="padding:20px">
+
+        {{form.password.label}}
+        <br>
+        <br>
+        {{form.password}}
+        <br>
+        <br>
+        {% if form.password.errors %}
+            {% for error in form.password.errors %}
+            <b style="color:tomato;"> {{ error }} </b>
+            <br>
+            {% endfor %}
+        {% endif %}
+
+
+        {{form.password2.label}}
+        <br>
+        <br>
+        {{form.password2}}
+        <br>
+        <br>
+        {% if form.password2.errors %}
+            {% for error in form.password2.errors %}
+            <b style="color:tomato;"> {{ error }} </b>
+            <br>
+            {% endfor %}
+        {% endif %}
+
+
+        {{ form.csrf_token }}
+
+        {{ form.submit }}
+
+    </form>
+{%endif%}
+{% endblock %}
