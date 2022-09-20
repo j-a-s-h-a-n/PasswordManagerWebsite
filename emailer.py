@@ -4,8 +4,8 @@ from email.message import EmailMessage
 
 class Message():
     def __init__(self):
-        self.sender='jashansinghmalhi129304@outlook.com'
-        self.password='JashanMalhi123'
+        self.sender=''#enter email
+        self.password='' #enter password
         #self.reciver=''
         self.subject ='jj'
         self.body ='jjj'
