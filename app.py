@@ -10,7 +10,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'djaie dksk sooej'
 secret=app.config['SECRET_KEY']
 app.secret_key = secret
-URL = 'postgresql://zchwcojfbphbxd:85f7fd4795fe96ea00fe2ee046e5b383aa4d2a4146a81c49e3dd073463bb306d@ec2-34-231-42-166.compute-1.amazonaws.com:5432/d3sa35mr80olmb'
+url = ''#enter URL
 app.config['SQLALCHEMY_DATABASE_URI'] = URL
 db = SQLAlchemy(app)
 
