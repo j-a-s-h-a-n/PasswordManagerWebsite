@@ -6,11 +6,9 @@ Export
 {% endblock %}
 
 {% block content %}
-<br>
-
-{% if message %}
-<h3>{{ message }}</h3>
     <br>
-
-{% endif %}
+    {% if message %}
+        <h3>{{ message }}</h3>
+        <br>
+    {% endif %}
 {% endblock %}

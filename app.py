@@ -1,5 +1,5 @@
-from flask import Flask,render_template,session, redirect, url_for
-from forms import LoginForm,SignUp,Saver,Update,Forgot,UpdatePassword
+from flask import Flask,render_template,session, redirect, url_for,request
+from forms import LoginForm,SignUp,Saver,Update,Forgot
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 from emailer import Email,Message
@@ -19,7 +19,7 @@ s = URLSafeTimedSerializer(secret)
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String,unique=True)
-    password = db.Column(db.String)
+    password = db.Column(db.String(38))
     websites = db.relationship('Vault')
 
 class Vault(db.Model):
@@ -58,12 +58,27 @@ def login():
         if not user or check_password_hash(user.password,form.password.data) == False:
             return render_template('login.html', form=form, message='Wrong Credentials. Please Try Again.')
         else:
-            session['user'] = user.id
-            # return render_template('login.html',message='Successful Login!')
-            return redirect(url_for('passwords'))
+            token = s.dumps(user.id,salt='auth')
+
+            message = Message()
+            message.newMessage['To'] = user.email
+            message.newMessage['Subject'] = 'Conformation Link'
+            message.newMessage.set_content(f"https://supersecretpasswordvault.herokuapp.com/auth/{token}\n"
+                                           f"Link expires in 3 minutes.")
+            SendEmail = Email()
+            SendEmail.sendEmail(message)
+            return render_template('login.html',message='You have been sent an email conformation.')
+
     return render_template('login.html', form=form)
 
-
+@app.route('/auth/<string:token>')
+def authorization(token):
+    try:
+        user = s.loads(token,salt='auth',max_age=180)
+    except:
+        return render_template('login.html', message='Invaild Link or Link has expired. Try again. ')
+    session['user'] = user
+    return redirect(url_for('passwords'))
 
 @app.route('/signup', methods=['POST', 'GET'])
 def signup():
@@ -99,6 +114,10 @@ def passwords():
         user = User.query.filter_by(id=session['user']).first()
         if user:
             accounts = Vault.query.filter_by(owner=user.id)
+            for account in accounts:
+                token = account.password
+                password =  s.loads(account.password,salt='pass')
+                account.password = password
             return render_template('passwords.html',user=user,accounts=accounts)
     return redirect(url_for('login'))
 
@@ -109,7 +128,10 @@ def input():
         if form.validate_on_submit():
             if form.password.data=='':
                 form.password.data = randomPassword()
-            data = Vault(website = form.website.data, user = form.username.data,password = form.password.data,owner =session['user'])
+
+            token = s.dumps(form.password.data,salt='pass')
+
+            data = Vault(website = form.website.data, user = form.username.data,password = token,owner =session['user'])
             db.session.add(data)
             try:
                 db.session.commit()
@@ -137,15 +159,17 @@ def update(id):
     if 'user' not in session:
         return redirect(url_for('login'))
     account_to_update = Vault.query.get(id)
-    print(account_to_update.owner)
-    print(session['user'])
     if account_to_update.owner!=session['user']:
         return redirect(url_for('passwords'))
-    form = Update()
-    if form.validate_on_submit():
-        account_to_update.website = form.website.data
-        account_to_update.user = form.username.data
-        account_to_update.password = form.password.data
+    account_to_update.password = s.loads(account_to_update.password,salt='pass')
+    if request.method=='POST':
+        password = request.form['password']
+        username = request.form['username']
+        website = request.form['website']
+        token = s.dumps(password, salt='pass')
+        account_to_update.website = website
+        account_to_update.user = username
+        account_to_update.password = token
         try:
             db.session.commit()
         except Exception as e:
@@ -153,7 +177,7 @@ def update(id):
         finally:
             db.session.close()
         return redirect(url_for('passwords'))
-    return render_template('update.html',form = form , account = account_to_update,id=id )
+    return render_template('update.html', account = account_to_update,id=id )
 
 @app.route('/forgotpassword', methods = ['POST', 'GET'])
 def forgot():
