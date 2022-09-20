@@ -3,11 +3,13 @@ from forms import LoginForm,SignUp,Saver,Update,Forgot,UpdatePassword
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 from emailer import Email,Message
-from itsdangerous import URLSafeTimedSerializer
+from itsdangerous.url_safe import URLSafeTimedSerializer
 import os, random, string
 
 app = Flask(__name__)
-secret=app.config['SECRET_KEY'] = 'jadhdndmladineonddnkenkenknlsklsnlxleiiooosoomnchiuei'
+app.config['SECRET_KEY'] = 'djaie dksk sooej'
+secret=app.config['SECRET_KEY']
+app.secret_key = secret
 URL = 'postgresql://zchwcojfbphbxd:85f7fd4795fe96ea00fe2ee046e5b383aa4d2a4146a81c49e3dd073463bb306d@ec2-34-231-42-166.compute-1.amazonaws.com:5432/d3sa35mr80olmb'
 app.config['SQLALCHEMY_DATABASE_URI'] = URL
 db = SQLAlchemy(app)
