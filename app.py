@@ -1,5 +1,6 @@
 from flask import Flask,render_template,session, redirect, url_for
 from forms import LoginForm,SignUp,Saver,Update,Forgot,UpdatePassword
+from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 from emailer import Email,Message
 from itsdangerous import URLSafeTimedSerializer
@@ -51,8 +52,8 @@ def login():
         session.pop('user')
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data, password=form.password.data).first()
-        if user is None:
+        user = User.query.filter_by(email=form.email.data).first()
+        if not user or check_password_hash(user.password,form.password.data) == False:
             return render_template('login.html', form=form, message='Wrong Credentials. Please Try Again.')
         else:
             session['user'] = user.id
@@ -70,7 +71,7 @@ def signup():
         if user:
             return render_template('signup.html',form=form,message="Account already exist!")
         else:
-            newUser=User(email=form.email.data,password=form.password.data)
+            newUser=User(email=form.email.data,password=generate_password_hash(form.password.data))
             db.session.add(newUser)
             try:
                 db.session.commit()
@@ -95,9 +96,7 @@ def passwords():
     if 'user' in session:
         user = User.query.filter_by(id=session['user']).first()
         if user:
-
             accounts = Vault.query.filter_by(owner=user.id)
-
             return render_template('passwords.html',user=user,accounts=accounts)
     return redirect(url_for('login'))
 
@@ -131,16 +130,15 @@ def delete(id):
     finally:
         db.session.close()
     return redirect(url_for('passwords'))
-
-@app.route('/updater/<string:id>', methods = ['POST', 'GET'])
-def router(id):
-    token = s.dumps(id,salt='accounts')
-    return redirect(url_for('update',id=token))
-
 @app.route('/update/<string:id>', methods = ['POST', 'GET'])
 def update(id):
-    account_id=s.loads(id,salt='accounts',max_age=15)
-    account_to_update = Vault.query.get(account_id)
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    account_to_update = Vault.query.get(id)
+    print(account_to_update.owner)
+    print(session['user'])
+    if account_to_update.owner!=session['user']:
+        return redirect(url_for('passwords'))
     form = Update()
     if form.validate_on_submit():
         account_to_update.website = form.website.data
@@ -179,7 +177,7 @@ def reset(token):
     user = User.query.filter_by(id=id).first()
     if form.validate_on_submit():
         if user:
-            user.password=form.password.data
+            user.password=generate_password_hash(form.password.data)
             try:
                 db.session.commit()
             except Exception as e:
